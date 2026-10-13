@@ -1,0 +1,34 @@
+# RayCluster for the robot teacher workers (ARO). Image built in-cluster from image/Containerfile
+# (Ray 2.59 CPU + MuJoCo + Gymnasium + OSMesa). Workers are pinned to the ray-cpu MachineSet
+# (k8s/aro/cpu-machineset.sh: 4x Standard_D32s_v3 = 128 vCPU -> 4-CPU head + 56 x 2-CPU workers).
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: hand-decision
+  namespace: hello-chris-ai-4
+spec:
+  rayVersion: "2.59.0"
+  headGroupSpec:
+    rayStartParams: {dashboard-host: "0.0.0.0", num-cpus: "0"}
+    template:
+      spec:
+        nodeSelector: {workload: ray-cpu}
+        containers:
+          - name: ray-head
+            image: image-registry.openshift-image-registry.svc:5000/hello-chris-ai-4/robot-ray:latest
+            env: [{name: MUJOCO_GL, value: osmesa}]
+            resources: {limits: {cpu: "4", memory: 16Gi}, requests: {cpu: "4", memory: 16Gi}}
+  workerGroupSpecs:
+    - groupName: cpu-workers
+      replicas: 56
+      minReplicas: 0
+      maxReplicas: 64
+      rayStartParams: {num-cpus: "2"}
+      template:
+        spec:
+          nodeSelector: {workload: ray-cpu}
+          containers:
+            - name: ray-worker
+              image: image-registry.openshift-image-registry.svc:5000/hello-chris-ai-4/robot-ray:latest
+              env: [{name: MUJOCO_GL, value: osmesa}]
+              resources: {limits: {cpu: "2", memory: 4Gi}, requests: {cpu: "2", memory: 4Gi}}

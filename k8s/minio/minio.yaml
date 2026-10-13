@@ -1,0 +1,48 @@
+# MinIO for fixtures, DAgger logs, run summaries and rollout videos (same role as hello-chris-dd-kuberay/k8s/minio).
+# Bitnami image (the upstream minio images went private in 2025). Internal test credentials only - in-cluster use.
+apiVersion: v1
+kind: Namespace
+metadata: {name: minio}
+---
+apiVersion: v1
+kind: Secret
+metadata: {name: minio-root-user, namespace: minio}
+type: Opaque
+stringData: {MINIO_ROOT_USER: CHANGE_ME, MINIO_ROOT_PASSWORD: CHANGE_ME}   # set real values before applying; never commit them
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: minio, namespace: minio}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: {requests: {storage: 20Gi}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: minio, namespace: minio, labels: {app: minio}}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: minio}}
+  strategy: {type: Recreate}
+  template:
+    metadata: {labels: {app: minio}}
+    spec:
+      containers:
+      - name: minio
+        image: docker.io/bitnamilegacy/minio:latest
+        envFrom: [{secretRef: {name: minio-root-user}}]
+        env:
+        - {name: MINIO_DEFAULT_BUCKETS, value: robot}
+        - {name: MINIO_DATA_DIR, value: /bitnami/minio/data}
+        ports: [{containerPort: 9000, name: api}, {containerPort: 9001, name: console}]
+        readinessProbe: {httpGet: {path: /minio/health/ready, port: 9000}, periodSeconds: 10}
+        resources: {requests: {cpu: 200m, memory: 1Gi}, limits: {cpu: "2", memory: 2Gi}}
+        volumeMounts: [{mountPath: /bitnami/minio/data, name: data}]
+      volumes: [{name: data, persistentVolumeClaim: {claimName: minio}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: minio, namespace: minio}
+spec:
+  selector: {app: minio}
+  ports: [{name: api, port: 9000, targetPort: 9000}, {name: console, port: 9001, targetPort: 9001}]

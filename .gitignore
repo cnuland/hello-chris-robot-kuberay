@@ -1,0 +1,10 @@
+app/venv/
+app/ignored/
+__pycache__/
+*.pyc
+*.npz
+*.mp4
+!media/*.mp4
+.DS_Store
+.pytest_cache/
+app/.pytest_cache/

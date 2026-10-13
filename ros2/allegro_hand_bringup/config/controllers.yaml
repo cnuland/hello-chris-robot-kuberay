@@ -1,0 +1,10 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 200
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    hand_position_controller:
+      type: position_controllers/JointGroupPositionController
+hand_position_controller:
+  ros__parameters:
+    joints: [ffj0, ffj1, ffj2, ffj3, mfj0, mfj1, mfj2, mfj3, rfj0, rfj1, rfj2, rfj3, thj0, thj1, thj2, thj3]   # TODO: names from the vendor URDF

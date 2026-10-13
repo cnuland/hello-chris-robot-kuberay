@@ -1,0 +1,16 @@
+# ROS 2 Jazzy runtime for the assembly cell graph (cell_sim + part_inspector + supervisor + student_controller).
+# Built in-cluster: k8s/ros2/run-ros-episode.sh (OpenShift binary Docker build from a staged context).
+FROM docker.io/library/ros:jazzy-ros-base
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip libosmesa6 libgl1 ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --no-cache-dir --break-system-packages "numpy<2" "mujoco>=3.1" "gymnasium>=0.29" requests pillow \
+        imageio imageio-ffmpeg boto3 \
+    && pip3 install --no-cache-dir --break-system-packages torch --index-url https://download.pytorch.org/whl/cpu
+COPY app /opt/cell/app
+COPY ros2 /opt/ros_ws/src
+RUN . /opt/ros/jazzy/setup.sh && cd /opt/ros_ws && colcon build --packages-select assembly_cell_ros && chmod -R a+rX /opt/ros_ws /opt/cell
+ENV MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa CELL_APP_DIR=/opt/cell/app HOME=/tmp ROS_HOME=/tmp/ros \
+    ROS_LOG_DIR=/tmp/ros/log ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST OMP_NUM_THREADS=2
+RUN printf '#!/bin/bash\nset -e\nsource /opt/ros/jazzy/setup.bash\nsource /opt/ros_ws/install/setup.bash\nexec "$@"\n' > /ros_entry.sh && chmod a+rx /ros_entry.sh
+ENTRYPOINT ["/ros_entry.sh"]
+CMD ["ros2", "launch", "assembly_cell_ros", "assembly_cell.launch.py"]

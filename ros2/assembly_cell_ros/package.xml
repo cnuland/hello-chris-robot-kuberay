@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>assembly_cell_ros</name>
+  <version>0.6.0</version>
+  <description>ROS 2 graph for the multi-part Panda assembly cell: MuJoCo cell simulator, DiffusionGemma part inspector and
+    cell supervisor, and the distilled student controller.</description>
+  <maintainer email="noreply@example.com">hello-chris-robot-kuberay</maintainer>
+  <license>Apache-2.0</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

@@ -1,0 +1,9 @@
+# Robot teacher/student worker image: Ray (CPU) + MuJoCo + Gymnasium + PyTorch (CPU) + offscreen rendering (OSMesa).
+# Built in-cluster (OpenShift binary Docker build): oc start-build robot-ray -n hello-chris-ai-4 --from-dir=image
+FROM docker.io/rayproject/ray:2.59.0-py312-cpu
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends libosmesa6 libgl1 libglfw3 ffmpeg && rm -rf /var/lib/apt/lists/*
+USER ray
+RUN pip install --no-cache-dir "mujoco>=3.1" "gymnasium>=0.29" numpy requests pillow imageio imageio-ffmpeg boto3
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+ENV MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa
